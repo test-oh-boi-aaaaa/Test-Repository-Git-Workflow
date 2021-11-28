@@ -1,0 +1,28 @@
+name: Merge me!
+
+on:
+  # Runs if a push is made to master branch
+  push:
+    branches: [ master ]
+  # Allows you to run this workflow manually from the Actions tab, for testing purpose
+  workflow_dispatch:
+
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Merge master -> develop
+        uses: devmasx/merge-branch@1.4.0
+        with:
+          type: now
+          from_branch: master
+          target_branch: develop
+          # Depending on branch protection rules, a manually populated
+          # `GITHUB_TOKEN_WORKAROUND` secret with permissions to push to
+          # a protected branch must be used.
+          #
+          # A secret token must be used as a normal GitHub Actions token does not support pushing
+          # to protected branches.
+          GITHUB_TOKEN: ${{ secrets.BRANCH_PROTECTION_OVERRIDE }}
