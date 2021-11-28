@@ -18,4 +18,5 @@ jobs:
           type: now
           from_branch: master
           target_branch: develop
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # custom token with admin access
+          GITHUB_TOKEN: ${{ secrets.BRANCH_PROTECTION_OVERRIDE }}
