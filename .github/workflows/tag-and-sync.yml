@@ -1,0 +1,56 @@
+name: Tag and Sync
+on:
+  # Runs if a push is made to master branch
+  push:
+    branches: [ master ]
+  # Allows manual running, for testing purposes
+  workflow_dispatch:
+
+jobs:
+  getTag:
+    runs-on: ubuntu-latest
+    outputs:
+      hasTag: ${{ steps.hasTag.outputs.TAG }}
+    steps:
+      - name: Get Merged Branch
+        uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
+        id: getMergedBranch
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if merged pull request contained a tag
+        id: hasTag
+        run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
+  
+  tag-branch:
+    needs: getTag
+    runs-on: ubuntu-latest
+    # Only runs if tag was captured from regex
+    if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
+
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v2
+
+      - name: Tag master branch
+        run: git tag "${{ fromJSON(needs.getTag.outputs.hasTag) }}"
+
+  sync-branches:
+    needs: getTag
+    runs-on: ubuntu-latest
+    # Only runs if tag was captured from regex
+    if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
+
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v2
+
+      - name: Merge master into develop
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          message: "Sync develop with release ${{ fromJSON(needs.getTag.outputs.hasTag) }} from master"
+          from_branch: master
+          target_branch: develop
+          # custom token with admin access
+          github_token: ${{ secrets.BRANCH_PROTECTION_OVERRIDE }}
