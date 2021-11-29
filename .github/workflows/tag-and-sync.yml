@@ -56,6 +56,9 @@ jobs:
       - name: Tag master branch
         run: git tag "${{ needs.getTag.outputs.hasTag }}"
 
+      - name: Push tag to origin
+        run: git push origin "${{ needs.getTag.outputs.hasTag }}"
+
   sync-branches:
     needs: getTag
     runs-on: ubuntu-latest
