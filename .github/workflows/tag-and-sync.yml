@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Tag master branch
-        run: git tag "${{ fromJSON(needs.getTag.outputs.hasTag) }}"
+        run: git tag "${{ needs.getTag.outputs.hasTag }}"
 
   sync-branches:
     needs: getTag
