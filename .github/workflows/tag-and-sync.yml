@@ -1,72 +1,49 @@
-name: Tag and Sync post release
+name: Tag post-release
 on:
-  # Runs if a push is made to master branch
-  push:
-    branches: [ master ]
-  # Allows manual running, for testing purposes
-  workflow_dispatch:
+  # Runs if a push is made to develop from a release branch
+  pull_request:
+    branches: [ develop ]
+    types: [ closed ] 
 
 jobs:
   get-tag:
     runs-on: ubuntu-latest
     outputs:
       version-tag: ${{ steps.version-tag.outputs.TAG }}
-    steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v2
+    if: ${{ github.event.pull_request.merge && startsWith(github.event.pull_request.head_ref, 'release') }} 
 
-      - name: Get merged branch
-        uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
-        id: getMergedBranch
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2 
 
       - name: Check if merged pull request contained a tag
         uses: actions-ecosystem/action-regex-match@v2
         id: tag-regex
         with:
           text: ${{ github.event.head_commit.message }}
-          regex: '(release|bugfix)\/(\d\.\d(\.\d)?)'
+          regex: '(release|bugfix)\/(\d\.\d(\.\d)?)' 
 
       - name: Check if tag exists
         if: ${{ steps.tag-regex.outputs.match == '' }}
         uses: actions/github-script@v3
         with:
           script: |
-              core.setFailed('Tag was not found')
+              core.setFailed('Tag was not found') 
 
       - name: Export tag content
         id: version-tag
-        run: echo "::set-output name=TAG::${{ steps.tag-regex.outputs.group2 }}"
+        run: echo "::set-output name=TAG::${{ steps.tag-regex.outputs.group2 }}" 
 
   tag-branch:
     needs: get-tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest 
 
     steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2 
 
-      - name: Tag master branch
-        run: git tag "v${{ needs.get-tag.outputs.version-tag }}"
+      - name: Tag develop branch
+        run: git tag "v${{ needs.get-tag.outputs.version-tag }}" 
 
       - name: Push tag to origin
         run: git push origin "v${{ needs.get-tag.outputs.version-tag }}"
-
-  sync-branches:
-    needs: get-tag
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v2
-
-      - name: Merge master into develop
-        uses: devmasx/merge-branch@master
-        with:
-          type: now
-          message: "Sync tag v${{ needs.get-tag.outputs.version-tag }} from master to develop"
-          from_branch: master
-          target_branch: develop
-          # custom token with admin access
-          github_token: ${{ secrets.BRANCH_PROTECTION_OVERRIDE }}
