@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  get-tag:
+  getTag:
     outputs:
       hasTag: ${{ steps.hasTag.outputs.TAG }}
     runs-on: ubuntu-latest
@@ -15,37 +15,36 @@ jobs:
       - uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
       - name: Get Merged Branch
       - id: getMergedBranch
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if merged pull request contained a tag
       - id: hasTag
         run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^v[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
   
   tag-branch:
-    needs: get-tag
+    needs: getTag
+    runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: [[ -z ${{ fromJSON(needs.get-tag.outputs.hasTag) }} ]]
+    if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
     
     steps:
-      tag-master:
-        - uses: actions/checkout@v2
-        - name: Tag master branch
-          run: git tag "${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
+      - uses: actions/checkout@v2
+      - name: Tag master branch
+        run: git tag "${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
       
   sync-branches:
-    needs: get-tag
+    runs-on: ubuntu-latest
+    needs: getTag
     # Only runs if tag was captured from regex
-    if: [[ -z ${{ fromJSON(needs.get-tag.outputs.hasTag) }} ]]
+    if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
     
     steps:
-      merge-master-to-develop:
-      
-        - uses: devmasx/merge-branch@master
-          with:
-            type: now
-            message: "Sync develop with release ${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
-            from_branch: master
-            target_branch: develop
-            # custom token with admin access
-            github_token: ${{ secrets.BRANCH_PROTECTION_OVERRIDE }}
+      - uses: devmasx/merge-branch@master
+        with:
+          type: now
+          message: "Sync develop with release ${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
+          from_branch: master
+          target_branch: develop
+          # custom token with admin access
+          github_token: ${{ secrets.BRANCH_PROTECTION_OVERRIDE }}
