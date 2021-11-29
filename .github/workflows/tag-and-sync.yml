@@ -20,7 +20,7 @@ jobs:
 
       - name: Check if merged pull request contained a tag
         id: hasTag
-        run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^v[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
+        run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
   
   tag-branch:
     needs: getTag
