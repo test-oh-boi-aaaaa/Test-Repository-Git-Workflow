@@ -26,7 +26,7 @@ jobs:
         id: tagRegex
         with:
           text: ${{ github.event.head_commit.message }}
-          regex: '([0-9]\.[0-9](\.[0-9])?)$'
+          regex: '([0-9]\.[0-9](\.[0-9])?)'
 
       - name: Export tag content
         id: hasTag
