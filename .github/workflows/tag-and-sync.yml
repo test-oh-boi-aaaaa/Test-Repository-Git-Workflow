@@ -32,6 +32,14 @@ jobs:
         id: hasTag
         run: echo "::set-output name=TAG::${{ steps.tagRegex.outputs.match }}"
 
+  echo-test:
+    needs: getTag
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Has Tag Value
+        run: echo "${{ needs.getTag.outputs.hasTag }}"
+
   tag-branch:
     needs: getTag
     runs-on: ubuntu-latest
