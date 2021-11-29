@@ -40,14 +40,11 @@ jobs:
       - name: Has Tag Value
         run: echo "${{ needs.getTag.outputs.hasTag }}"
 
-      - name: Has Tag From JSON Value
-        run: echo "${{ fromJSON(needs.getTag.outputs.hasTag) }}"
-
   tag-branch:
     needs: getTag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
+    if: ${{ needs.getTag.outputs.hasTag != "" }}
 
     steps:
       - name: Checkout main repo
@@ -60,7 +57,7 @@ jobs:
     needs: getTag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
+    if: ${{ needs.getTag.outputs.hasTag != "" }}
 
     steps:
       - name: Checkout main repo
@@ -70,7 +67,7 @@ jobs:
         uses: devmasx/merge-branch@master
         with:
           type: now
-          message: "Sync develop with release ${{ fromJSON(needs.getTag.outputs.hasTag) }} from master"
+          message: "Sync develop with release ${{ needs.getTag.outputs.hasTag }} from master"
           from_branch: master
           target_branch: develop
           # custom token with admin access
