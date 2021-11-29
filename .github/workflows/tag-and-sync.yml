@@ -28,6 +28,13 @@ jobs:
           text: ${{ github.event.head_commit.message }}
           regex: '([0-9]\.[0-9](\.[0-9])?)'
 
+      - name: Check if tag exists
+        if: ${{ steps.tag-regex.outputs.match == '' }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed('Tag was not found')
+
       - name: Export tag content
         id: version-tag
         run: echo "::set-output name=TAG::${{ steps.tag-regex.outputs.match }}"
@@ -35,8 +42,6 @@ jobs:
   tag-branch:
     needs: get-tag
     runs-on: ubuntu-latest
-    # Only runs if tag was captured from regex
-    if: ${{ needs.get-tag.outputs.version-tag}} != ""
 
     steps:
       - name: Checkout main repo
@@ -51,8 +56,6 @@ jobs:
   sync-branches:
     needs: get-tag
     runs-on: ubuntu-latest
-    # Only runs if tag was captured from regex
-    if: ${{ needs.get-tag.outputs.version-tag}} != ""
 
     steps:
       - name: Checkout main repo
