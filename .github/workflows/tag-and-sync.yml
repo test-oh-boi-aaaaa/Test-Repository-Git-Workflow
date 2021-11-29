@@ -12,8 +12,8 @@ jobs:
     outputs:
       hasTag: ${{ steps.hasTag.outputs.TAG }}
     steps:
-      - uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
-        name: Get Merged Branch
+      - name: Get Merged Branch
+        uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
         id: getMergedBranch
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -42,8 +42,11 @@ jobs:
     if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
 
     steps:
-      - uses: devmasx/merge-branch@master
+      - name: Checkout main repo
+        uses: actions/checkout@v2
+
       - name: Merge master into develop
+        uses: devmasx/merge-branch@master
         with:
           type: now
           message: "Sync develop with release ${{ fromJSON(needs.getTag.outputs.hasTag) }} from master"
