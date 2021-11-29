@@ -1,4 +1,4 @@
-name: "Tag n' Sync"
+name: Tag and Sync
 on:
   # Runs if a push is made to master branch
   push:
@@ -18,7 +18,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v2
       - name: Check if merged pull request contained a tag
       - id: hasTag
         run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^v[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
@@ -32,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Tag master branch
-        run: git tag "${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
+        run: git tag "${{ fromJSON(needs.getTag.outputs.hasTag) }}"
       
   sync-branches:
     needs: getTag
@@ -42,9 +41,10 @@ jobs:
     
     steps:
       - uses: devmasx/merge-branch@master
+      - name: Merge master into develop
         with:
           type: now
-          message: "Sync develop with release ${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
+          message: "Sync develop with release ${{ fromJSON(needs.getTag.outputs.hasTag) }} from master"
           from_branch: master
           target_branch: develop
           # custom token with admin access
