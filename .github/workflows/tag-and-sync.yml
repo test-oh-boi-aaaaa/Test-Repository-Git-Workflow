@@ -32,7 +32,7 @@ jobs:
         id: hasTag
         run: echo "::set-output name=TAG::${{ steps.tagRegex.outputs.match }}"
 
-  tag-branch:
+  tagBranch:
     needs: getTag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
@@ -45,8 +45,8 @@ jobs:
       - name: Tag master branch
         run: git tag "${{ fromJSON(needs.getTag.outputs.hasTag) }}"
 
-  sync-branches:
-    needs: getTag
+  syncBranches:
+    needs: tagBranch
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
     if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
