@@ -1,4 +1,4 @@
-name: Tag and Sync
+name: Tag and Sync post release
 on:
   # Runs if a push is made to master branch
   push:
@@ -7,15 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  getTag:
+  get-tag:
     runs-on: ubuntu-latest
     outputs:
-      hasTag: ${{ steps.hasTag.outputs.TAG }}
+      version-tag: ${{ steps.version-tag.outputs.TAG }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v2
 
-      - name: Get Merged Branch
+      - name: Get merged branch
         uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
         id: getMergedBranch
         with:
@@ -23,47 +23,36 @@ jobs:
 
       - name: Check if merged pull request contained a tag
         uses: actions-ecosystem/action-regex-match@v2
-        id: tagRegex
+        id: tag-regex
         with:
           text: ${{ github.event.head_commit.message }}
           regex: '([0-9]\.[0-9](\.[0-9])?)'
 
       - name: Export tag content
-        id: hasTag
-        run: echo "::set-output name=TAG::${{ steps.tagRegex.outputs.match }}"
-
-  echo-test:
-    needs: getTag
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Has Tag Value
-        run: echo "${{ needs.getTag.outputs.hasTag }}"
+        id: version-tag
+        run: echo "::set-output name=TAG::${{ steps.tag-regex.outputs.match }}"
 
   tag-branch:
-    needs: getTag
+    needs: get-tag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: ${{ needs.getTag.outputs.hasTag}} != ""
+    if: ${{ needs.get-tag.outputs.version-tag}} != ""
 
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v2
 
-      - name: Check hash
-        run: git rev-parse HEAD
-
       - name: Tag master branch
-        run: git tag "${{ needs.getTag.outputs.hasTag }}"
+        run: git tag "${{ needs.get-tag.outputs.version-tag }}"
 
       - name: Push tag to origin
-        run: git push origin "${{ needs.getTag.outputs.hasTag }}"
+        run: git push origin "${{ needs.get-tag.outputs.version-tag }}"
 
   sync-branches:
-    needs: getTag
+    needs: get-tag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: ${{ needs.getTag.outputs.hasTag}} != ""
+    if: ${{ needs.get-tag.outputs.version-tag}} != ""
 
     steps:
       - name: Checkout main repo
@@ -73,7 +62,7 @@ jobs:
         uses: devmasx/merge-branch@master
         with:
           type: now
-          message: "Sync develop with release ${{ needs.getTag.outputs.hasTag }} from master"
+          message: "Sync tag ${{ needs.get-tag.outputs.version-tag }} from master to develop"
           from_branch: master
           target_branch: develop
           # custom token with admin access
