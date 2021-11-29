@@ -44,7 +44,7 @@ jobs:
     needs: getTag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: ${{ needs.getTag.outputs.hasTag != "" }}
+    if: ${{ needs.getTag.outputs.hasTag}} != ""
 
     steps:
       - name: Checkout main repo
@@ -57,7 +57,7 @@ jobs:
     needs: getTag
     runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
-    if: ${{ needs.getTag.outputs.hasTag != "" }}
+    if: ${{ needs.getTag.outputs.hasTag}} != ""
 
     steps:
       - name: Checkout main repo
