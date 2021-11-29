@@ -12,6 +12,9 @@ jobs:
     outputs:
       hasTag: ${{ steps.hasTag.outputs.TAG }}
     steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v2
+
       - name: Get Merged Branch
         uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
         id: getMergedBranch
@@ -19,9 +22,16 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if merged pull request contained a tag
+        uses: actions-ecosystem/action-regex-match@v2
+        id: tagRegex
+        with:
+          text: ${{ github.event.commits[0].message }}
+          regex: '^[0-9]\.[0-9](\.[0-9])?'
+
+      - name: Export tag content
         id: hasTag
-        run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
-  
+        run: echo "::set-output name=TAG::${{ steps.tagRegex.outputs.match }}"
+
   tag-branch:
     needs: getTag
     runs-on: ubuntu-latest
