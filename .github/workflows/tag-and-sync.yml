@@ -26,7 +26,7 @@ jobs:
         id: tag-regex
         with:
           text: ${{ github.event.head_commit.message }}
-          regex: '([0-9]\.[0-9](\.[0-9])?)'
+          regex: '(release|bugfix)\/(\d\.\d(\.\d)?)'
 
       - name: Check if tag exists
         if: ${{ steps.tag-regex.outputs.match == '' }}
@@ -37,7 +37,7 @@ jobs:
 
       - name: Export tag content
         id: version-tag
-        run: echo "::set-output name=TAG::${{ steps.tag-regex.outputs.match }}"
+        run: echo "::set-output name=TAG::${{ steps.tag-regex.outputs.group2 }}"
 
   tag-branch:
     needs: get-tag
