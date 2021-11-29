@@ -40,6 +40,9 @@ jobs:
       - name: Has Tag Value
         run: echo "${{ needs.getTag.outputs.hasTag }}"
 
+      - name: Has Tag Value
+        run: echo "${{ fromJSON(needs.getTag.outputs.hasTag) }}"
+
   tag-branch:
     needs: getTag
     runs-on: ubuntu-latest
