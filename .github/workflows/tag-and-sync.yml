@@ -8,9 +8,9 @@ on:
 
 jobs:
   getTag:
+    runs-on: ubuntu-latest
     outputs:
       hasTag: ${{ steps.hasTag.outputs.TAG }}
-    runs-on: ubuntu-latest
     steps:
       - uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
       - name: Get Merged Branch
@@ -18,6 +18,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/checkout@v2
       - name: Check if merged pull request contained a tag
       - id: hasTag
         run: echo "::set-output name=TAG::[[ ${{ github.event.commits[0].message }} =~ ^v[0-9]\.[0-9](\.[0-9])? && ${{ BASH_REMATCH[1] }} ]]"
@@ -34,8 +35,8 @@ jobs:
         run: git tag "${{ fromJSON(needs.get-tag.outputs.hasTag) }}"
       
   sync-branches:
-    runs-on: ubuntu-latest
     needs: getTag
+    runs-on: ubuntu-latest
     # Only runs if tag was captured from regex
     if: ${{ fromJSON(needs.getTag.outputs.hasTag) != 0 }}
     
